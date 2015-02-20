@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Whos On Pool?</title>
+  <link href='http://fonts.googleapis.com/css?family=PT+Sans&subset=latin' rel='stylesheet' type='text/css'>
+  <style type="text/css">
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
+    #status-message {
+      font-family: 'PT Sans', sans-serif;
+      font-size: 6em;
+      padding: 0;
+      margin: 0;
+      position: relative;
+      top: 50%;
+      transform: translateY(-50%);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1 id='status-message'>Nobody</h1>
+  <script type="text/javascript">
+
+    // Create a new HTML5 EventSource
+    var source = new EventSource('/status/');
+
+    // Create a callback for when a new message is received.
+    source.onmessage = function(e) {
+
+        // Append the `data` attribute of the message to the DOM.
+        document.getElementById('status-message').innerHTML = e.data;
+    };
+  </script>
+</body>
+</html>
