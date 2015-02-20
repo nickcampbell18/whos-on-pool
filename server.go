@@ -22,25 +22,10 @@ import (
 // and broadcasting events (messages) to those clients.
 //
 type Broker struct {
-
-	// Create a map of clients, the keys of the map are the channels
-	// over which we can push messages to attached clients.  (The values
-	// are just booleans and are meaningless.)
-	//
-	clients map[chan string]bool
-
-	// Channel into which new clients can be pushed
-	//
-	newClients chan chan string
-
-	// Channel into which disconnected clients should be pushed
-	//
+	clients        map[chan string]bool
+	newClients     chan chan string
 	defunctClients chan chan string
-
-	// Channel into which messages are pushed to be broadcast out
-	// to attahed clients.
-	//
-	messages chan string
+	messages       chan string
 }
 
 // This Broker method starts a new goroutine.  It handles
@@ -48,17 +33,8 @@ type Broker struct {
 // of messages out to clients that are currently attached.
 //
 func (b *Broker) Start() {
-
-	// Start a goroutine
-	//
 	go func() {
-
-		// Loop endlessly
-		//
 		for {
-
-			// Block until we receive from one of the
-			// three following channels.
 			select {
 
 			case s := <-b.newClients:
@@ -168,15 +144,10 @@ func MainPageHandler(w http.ResponseWriter, r *http.Request) {
 	// Read in the template with our SSE JavaScript code.
 	t, err := template.ParseFiles("templates/index.html")
 	if err != nil {
-		log.Fatal("WTF dude, error parsing your template.")
+		log.Fatal("index.html template not found")
 
 	}
-
-	// Render the template, writing to `w`.
 	t.Execute(w, nil)
-
-	// Done.
-	log.Println("Finished HTTP request at ", r.URL.Path)
 }
 
 // Main routine
