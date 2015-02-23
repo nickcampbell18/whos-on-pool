@@ -176,10 +176,10 @@ func main() {
 	// out to any clients that are attached.
 	go func() {
 		for {
-			answers := []string{"Nobody", "Some idiot", "These clowns"}
+			answers := []string{"empty", "occupied", "verybusy"}
 
 			b.messages <- answers[rand.Intn(len(answers))]
-			time.Sleep(1 * 1e9)
+			time.Sleep(4 * 1e9)
 		}
 	}()
 
@@ -188,5 +188,5 @@ func main() {
 	http.Handle("/", http.HandlerFunc(MainPageHandler))
 
 	// Start the server and listen forever on port 8000.
-	http.ListenAndServe(":8000", nil)
+	http.ListenAndServe(":8080", nil)
 }
