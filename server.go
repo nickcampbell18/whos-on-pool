@@ -12,9 +12,10 @@ import (
 	"fmt"
 	"html/template"
 	"log"
-	"math/rand"
 	"net/http"
 	"time"
+
+	"github.com/stianeikeland/go-rpio"
 )
 
 // A single Broker will be created in this program. It is responsible
@@ -171,15 +172,50 @@ func main() {
 	// request to "/events/".
 	http.Handle("/status/", b)
 
-	// Generate a constant stream of events that get pushed
-	// into the Broker's messages channel and are then broadcast
-	// out to any clients that are attached.
+	err := rpio.Open()
+	if err != nil {
+		panic(err)
+	}
+
+	pin := rpio.Pin(7)
+	pin.Input()
+
+	max_size := 100 // 5 seconds
+
+	last_hundred_results := make([]int, 0)
+
+	// Order is important, state 0 == nobody at the table
+	states := []string{"empty", "occupied"}
+
+	current_value := 0
+
 	go func() {
 		for {
-			answers := []string{"empty", "occupied", "verybusy"}
+			new_val := int(pin.Read())
 
-			b.messages <- answers[rand.Intn(len(answers))]
-			time.Sleep(4 * 1e9)
+			if current_value == 0 && new_val == 1 {
+				current_value = 1
+				fmt.Println("Setting status to OCCUPIED")
+				b.messages <- states[1]
+			}
+
+			if len(last_hundred_results) < max_size {
+				last_hundred_results = append(last_hundred_results, new_val)
+			} else {
+				// Make a decision
+				sum := int(0)
+				for _, val := range last_hundred_results {
+					sum += val
+				}
+				if sum == 0 && current_value == 1 {
+					// Return 0 to clients
+					b.messages <- states[0]
+					current_value = 0
+					fmt.Println("Setting status to EMPTY (no presence for 5 seconds)")
+				}
+				last_hundred_results = make([]int, 0)
+			}
+			time.Sleep(100 * time.Millisecond)
 		}
 	}()
 
