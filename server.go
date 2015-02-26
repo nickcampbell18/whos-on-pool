@@ -29,6 +29,10 @@ type Broker struct {
 	messages       chan string
 }
 
+type HtmlConfig struct {
+	BootStatus string
+}
+
 // This Broker method starts a new goroutine.  It handles
 // the addition & removal of clients, as well as the broadcasting
 // of messages out to clients that are currently attached.
@@ -88,7 +92,6 @@ func (b *Broker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// Remove this client from the map of attached clients
 		// when `EventHandler` exits.
 		b.defunctClients <- messageChan
-		log.Println("HTTP connection just closed.")
 	}()
 
 	// Set the headers related to event streaming.
@@ -146,9 +149,13 @@ func MainPageHandler(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles("templates/index.html")
 	if err != nil {
 		log.Fatal("index.html template not found")
-
 	}
-	t.Execute(w, nil)
+
+	pin := rpio.Pin(7)
+	pin.Input()
+	result := state(int(pin.Read()))
+
+	t.Execute(w, &HtmlConfig{result})
 }
 
 // Main routine
@@ -184,9 +191,6 @@ func main() {
 
 	last_hundred_results := make([]int, 0)
 
-	// Order is important, state 0 == nobody at the table
-	states := []string{"empty", "occupied"}
-
 	current_value := 0
 
 	go func() {
@@ -196,7 +200,7 @@ func main() {
 			if current_value == 0 && new_val == 1 {
 				current_value = 1
 				fmt.Println("Setting status to OCCUPIED")
-				b.messages <- states[1]
+				b.messages <- state(1)
 			}
 
 			if len(last_hundred_results) < max_size {
@@ -209,7 +213,7 @@ func main() {
 				}
 				if sum == 0 && current_value == 1 {
 					// Return 0 to clients
-					b.messages <- states[0]
+					b.messages <- state(0)
 					current_value = 0
 					fmt.Println("Setting status to EMPTY (no presence for 5 seconds)")
 				}
@@ -225,4 +229,8 @@ func main() {
 
 	// Start the server and listen forever on port 8000.
 	http.ListenAndServe(":8080", nil)
+}
+
+func state(index int) string {
+	return []string{"empty", "occupied"}[index]
 }

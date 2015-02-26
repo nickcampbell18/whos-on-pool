@@ -19,13 +19,13 @@
     }
     #status-msg {
       font-family: 'PT Sans', sans-serif;
-      font-size: 6em;
+      font-size: 7em;
       text-align: center;
     }
   </style>
 </head>
 <body>
-  <h1 id="status-msg">Nobody is playing!</h1>
+  <h1 id="status-msg">...</h1>
   <script type="text/javascript">
 
     // Create a new HTML5 EventSource
@@ -37,15 +37,22 @@
     // statuses["verybusy"] = "http://media.giphy.com/media/dXTTAge3atNPa/giphy.gif" // Gross
 
     var titles = new Object();
-    titles["empty"] = "Nobody is playing!";
-    titles["occupied"] = "In use..."
+    titles["empty"] = "Nobody is playing! GO GO GO";
+    titles["occupied"] = "(Probably) In use..."
+
+    var boot_status = {{.BootStatus}}
+
+    var set_message = function(status_id) {
+      document.getElementById('status-msg').innerHTML = titles[status_id];
+      window.document.title = titles[status_id];
+    }
 
     // Create a callback for when a new message is received.
     source.onmessage = function(e) {
-      // document.getElementById('status-img').src = statuses[e.data];
-      document.getElementById('status-msg').innerHTML = titles[e.data];
-      window.document.title = titles[e.data];
+      set_message(e.data);
     };
+
+    set_message(boot_status);
   </script>
 </body>
 </html>
