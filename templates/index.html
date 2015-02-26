@@ -22,13 +22,10 @@
       font-size: 6em;
       text-align: center;
     }
-    #status-img {
-      width: 100%;
-    }
   </style>
 </head>
 <body>
-  <h1 id="status-msg">Loading...</h1>
+  <h1 id="status-msg">Nobody is playing!</h1>
   <script type="text/javascript">
 
     // Create a new HTML5 EventSource
@@ -42,7 +39,6 @@
     var titles = new Object();
     titles["empty"] = "Nobody is playing!";
     titles["occupied"] = "In use..."
-    titles["verybusy"] = "Very busy!"
 
     // Create a callback for when a new message is received.
     source.onmessage = function(e) {
@@ -51,6 +47,5 @@
       window.document.title = titles[e.data];
     };
   </script>
-  <img id="status-img" style="display: none">
 </body>
 </html>
